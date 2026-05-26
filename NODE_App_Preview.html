@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NODE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#000;--surface:#f2f2f7;--card:#fff;--border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.12);--white:#fff;
+  --text1:#000;--text2:rgba(0,0,0,0.55);--text3:rgba(0,0,0,0.3);
+  --purple:#7c3aed;--purple2:#9f5cff;--gold:#f59e0b;
+  --green:#34c759;--red:#ff3b30;--orange:#ff9500;--blue:#007aff;
+  --topbar:#000;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#000;}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;color:var(--text1);-webkit-font-smoothing:antialiased;}
+.app{max-width:390px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;overflow:hidden;}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:999;background:#070710;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.6s;}
+#loader.out{opacity:0;pointer-events:none;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.3);opacity:1;}} @keyframes nodePulse{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(124,58,237,0.5);}50%{transform:scale(1.6);box-shadow:0 0 50px rgba(160,80,255,0.9);}} @keyframes ringPulse{0%,100%{transform:scale(1);opacity:0.4;}50%{transform:scale(1.2);opacity:0.1;}}
+#loaderCanvas{display:block;margin-bottom:24px;}
+.loader-word{font-size:26px;font-weight:300;letter-spacing:10px;color:#fff;margin-bottom:5px;}
+.loader-sub{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:12px;}
+.loader-hello{font-size:14px;font-weight:500;color:rgba(255,255,255,0.7);margin-bottom:32px;height:24px;display:flex;align-items:center;justify-content:center;}
+.loader-btns{display:flex;flex-direction:column;align-items:center;gap:12px;opacity:1;transform:translateY(0);}
+.loader-btns.show{opacity:1;}
+.cpill{padding:13px 52px;background:#fff;border:none;border-radius:999px;font-family:inherit;font-size:14px;font-weight:600;color:#000;cursor:pointer;}
+.cpill:active{transform:scale(0.97);}
+.signup-btn{padding:12px 40px;background:transparent;border:1px solid rgba(180,100,255,0.5);color:rgba(255,255,255,0.8);border-radius:999px;font-family:inherit;font-size:13px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;}
+
+/* ── SIGN UP ── */
+#signupScreen{position:fixed;inset:0;z-index:998;background:#070710;display:none;flex-direction:column;padding:56px 28px 40px;overflow-y:auto;}
+#signupScreen.show{display:flex;}
+.su-back{background:none;border:none;color:rgba(255,255,255,0.5);font-family:inherit;font-size:14px;cursor:pointer;margin-bottom:28px;text-align:left;display:flex;align-items:center;gap:6px;}
+.su-title{font-size:24px;font-weight:700;color:#fff;margin-bottom:6px;}
+.su-sub{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;}
+.su-label{font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;margin-top:4px;}
+.su-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px 16px;color:#fff;font-family:inherit;font-size:15px;outline:none;margin-bottom:14px;}
+.su-input:focus{border-color:rgba(160,100,255,0.5);}
+.su-submit{width:100%;padding:14px;background:var(--purple);border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;color:#fff;cursor:pointer;margin-top:8px;}
+.su-otp-btn{width:100%;padding:13px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;color:var(--purple2);cursor:pointer;margin-top:4px;}
+.otp-inputs{display:flex;gap:10px;justify-content:center;margin:16px 0 20px;}
+.otp-box{width:44px;height:54px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-family:inherit;font-size:22px;font-weight:700;text-align:center;outline:none;}
+.otp-box:focus{border-color:rgba(160,100,255,0.6);}
+.su-demo-otp{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:12px 16px;font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:20px;text-align:center;}
+.su-otp-err{color:#ff6b63;font-size:13px;text-align:center;margin-bottom:12px;}
+.su-resend{width:100%;padding:11px;background:none;border:none;font-family:inherit;font-size:14px;color:rgba(255,255,255,0.4);cursor:pointer;margin-top:8px;}
+/* Role selector */
+.role-select{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
+.role-opt{padding:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;cursor:pointer;transition:all 0.2s;}
+.role-opt.selected{background:rgba(124,58,237,0.2);border-color:rgba(124,58,237,0.6);}
+.role-opt-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:3px;}
+.role-opt-sub{font-size:13px;color:rgba(255,255,255,0.4);}
+/* SP code input */
+.sp-code-wrap{margin-bottom:14px;}
+.sp-code-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px 16px;color:#fff;font-family:inherit;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;outline:none;text-align:center;}
+.sp-code-input:focus{border-color:rgba(160,100,255,0.5);}
+.sp-code-err{color:#ff6b63;font-size:13px;text-align:center;margin-bottom:12px;}
+.sp-code-hint{font-size:12px;color:rgba(255,255,255,0.3);text-align:center;margin-top:8px;}
+
+/* ── STORY OVERLAY ── */
+#storyOverlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;}
+#storyOverlay.show{display:flex;}
+.story-box{background:#111;border-radius:16px;width:320px;padding:20px;position:relative;}
+.story-timer-bar{width:100%;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-bottom:16px;overflow:hidden;}
+.story-timer-fill{height:100%;background:var(--purple);border-radius:2px;}
+.story-close{position:absolute;top:12px;right:12px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;line-height:1;}
+.story-biz-name{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;}
+.story-content{background:linear-gradient(135deg,#3b0764,#6d28d9);border-radius:12px;padding:24px;text-align:center;color:#fff;}
+.story-promo-title{font-size:18px;font-weight:700;margin-bottom:8px;}
+.story-promo-sub{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;}
+.story-promo-badge{display:inline-block;background:rgba(255,255,255,0.2);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:700;margin-top:12px;}
+
+/* ── FILTER PANEL ── */
+#filterPanel{position:fixed;inset:0;z-index:200;display:none;}
+#filterPanel.show{display:block;}
+.filter-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);}
+.filter-sheet{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;background:#fff;border-radius:20px 20px 0 0;padding:20px 20px 40px;}
+.filter-handle{width:36px;height:4px;background:rgba(0,0,0,0.15);border-radius:2px;margin:0 auto 20px;}
+.filter-title{font-size:17px;font-weight:700;margin-bottom:20px;}
+.filter-sec-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.filter-input-wrap{position:relative;margin-bottom:20px;}
+.filter-input{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:15px;color:var(--text1);outline:none;}
+.filter-input:focus{border-color:var(--purple);}
+.suggest-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:10;max-height:180px;overflow-y:auto;display:none;}
+.suggest-list.show{display:block;}
+.suggest-item{padding:11px 14px;font-size:14px;cursor:pointer;border-bottom:0.5px solid var(--border);}
+.suggest-item:last-child{border:none;}
+.suggest-match{color:var(--purple);font-weight:600;}
+.filter-apply{width:100%;padding:13px;background:var(--purple);border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;color:#fff;cursor:pointer;margin-top:8px;}
+.filter-clear{width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:14px;color:var(--text2);cursor:pointer;margin-top:8px;}
+
+/* ── MAIN ── */
+#mainApp{display:none;background:var(--surface);}
+.screen{display:none;min-height:calc(100vh - 49px);background:var(--surface);}
+.screen.on{display:block;}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:50;background:var(--topbar);}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:44px;}
+.topbar-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+#nodeTopbar{display:block;cursor:default;}
+.filter-btn{background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:5px 10px;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.search-wrap{padding:8px 16px 0;background:var(--topbar);}
+.search-box{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;}
+.search-box input{flex:1;background:none;border:none;outline:none;font-family:inherit;font-size:15px;color:#fff;}
+.search-box input::placeholder{color:rgba(255,255,255,0.35);}
+.pills-row{display:flex;gap:8px;padding:8px 16px;background:var(--topbar);overflow-x:auto;scrollbar-width:none;}
+.pills-row::-webkit-scrollbar{display:none;}
+.pill{flex-shrink:0;padding:5px 13px;border-radius:999px;font-size:13px;font-weight:500;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.pill.on{background:#fff;color:#000;}
+.sec-hdr{padding:16px 16px 8px;font-size:13px;font-weight:600;color:var(--text2);}
+
+/* ── BIZ CARDS ── */
+.biz-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:1px;}
+.biz-card{background:var(--card);cursor:pointer;border-bottom:0.5px solid var(--border);}
+.biz-card:first-child{border-radius:12px 12px 0 0;}
+.biz-card:last-child{border-radius:0 0 12px 12px;border-bottom:none;}
+.biz-card:only-child{border-radius:12px;}
+.biz-card:active{background:#f5f5f5;}
+.bc-inner{padding:13px 14px;}
+.bc-top{display:flex;align-items:center;gap:11px;}
+.av-wrap{position:relative;flex-shrink:0;cursor:pointer;}
+.bc-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;}
+.promo-ring{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--orange);}
+.avail-dot{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;}
+.avail-green{background:var(--green);}
+.avail-orange{background:var(--orange);}
+.vdot{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;background:var(--purple);border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;}
+.vdot svg{width:7px;height:7px;}
+.bc-meta{flex:1;min-width:0;}
+.bc-name{font-size:15px;font-weight:600;color:var(--text1);}
+.bc-sub{font-size:13px;color:var(--text2);margin-top:1px;}
+.bc-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.bc-resp{font-size:12px;color:var(--text3);}
+.sponsored-lbl{font-size:10px;color:var(--text3);}
+.bc-tags{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap;}
+.bc-tag{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:500;background:var(--surface);color:var(--text2);border:0.5px solid var(--border2);}
+
+/* ── PROFILE ── */
+.profile-nav{display:flex;align-items:center;padding:0 16px;height:44px;gap:10px;border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:50;background:#fff;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--purple);font-family:inherit;font-size:15px;font-weight:500;display:flex;align-items:center;gap:3px;padding:4px 0;}
+.pnav-name{font-size:16px;font-weight:700;flex:1;}
+.rep-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-family:inherit;font-size:13px;}
+.profile-hero{padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;border-bottom:0.5px solid var(--border);background:#fff;}
+.pav-lg{width:84px;height:84px;border-radius:50%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;position:relative;}
+.pav-promo-ring{box-shadow:0 0 0 3px #fff,0 0 0 5.5px var(--orange);}
+.pavail-dot{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;border:2px solid #fff;}
+.pname{font-size:20px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.pverified{background:var(--purple);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.pocc{font-size:14px;color:var(--text2);margin-top:3px;}
+.ploc{font-size:13px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:center;}
+.pstats{display:flex;width:100%;margin-top:16px;border-top:0.5px solid var(--border);padding-top:16px;}
+.ps{flex:1;text-align:center;}
+.ps+.ps{border-left:0.5px solid var(--border);}
+.ps-num{font-size:17px;font-weight:700;}
+.ps-lbl{font-size:11px;color:var(--text3);margin-top:1px;text-transform:uppercase;letter-spacing:0.4px;}
+.pbody{padding:0 16px 140px;background:#fff;}
+.psec{margin-top:18px;}
+.psec-t{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;}
+.psec-body{font-size:15px;color:var(--text2);line-height:1.6;}
+.psec-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.psec-chip{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:500;background:var(--surface);border:0.5px solid var(--border2);color:var(--text1);}
+.skills-wrap{display:flex;flex-wrap:wrap;gap:7px;}
+.skill-chip{padding:5px 11px;border-radius:8px;font-size:13px;background:var(--surface);border:0.5px solid var(--border2);color:var(--text1);}
+/* Services dynamic list */
+.svc-add-row{display:flex;gap:8px;margin-bottom:10px;}
+.svc-add-input{flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:9px 13px;font-family:inherit;font-size:14px;color:var(--text1);outline:none;}
+.svc-add-input:focus{border-color:var(--purple);}
+.svc-add-btn{width:38px;height:38px;border-radius:10px;background:var(--purple);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.svc-suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:100;max-height:160px;overflow-y:auto;display:none;}
+.svc-suggest.show{display:block;}
+.svc-suggest-item{padding:10px 13px;font-size:14px;cursor:pointer;border-bottom:0.5px solid var(--border);}
+.svc-suggest-item:last-child{border:none;}
+.svc-list{display:flex;flex-direction:column;gap:6px;}
+.svc-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface);border-radius:8px;border:0.5px solid var(--border2);}
+.svc-item-name{font-size:14px;font-weight:500;color:var(--text1);}
+.svc-remove{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:0 4px;}
+.svc-limit{font-size:12px;color:var(--text3);margin-top:6px;}
+/* Hours */
+.hours-today{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface);border-radius:10px;cursor:pointer;border:0.5px solid var(--border2);}
+.hours-today-left{display:flex;align-items:center;gap:8px;}
+.hours-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+.hours-dot.closed{background:var(--red);}
+.hours-label{font-size:14px;font-weight:600;}
+.hours-time{font-size:14px;color:var(--text2);}
+.hours-chevron{font-size:12px;color:var(--text3);transition:transform 0.2s;}
+.hours-chevron.open{transform:rotate(180deg);}
+.hours-dropdown{background:var(--surface);border-radius:10px;margin-top:6px;overflow:hidden;display:none;border:0.5px solid var(--border2);}
+.hours-dropdown.show{display:block;}
+.hours-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:13px;border-bottom:0.5px solid var(--border);}
+.hours-row:last-child{border:none;}
+.hours-day{font-weight:500;}
+.hours-val{color:var(--text2);}
+.hours-val.closed{color:var(--red);}
+.afterhours-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface);border-radius:10px;margin-top:6px;border:0.5px solid var(--border2);}
+.check-yes{background:var(--purple);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.check-no{background:var(--surface);border-radius:50%;width:20px;height:20px;border:1px solid var(--border2);flex-shrink:0;}
+.avail-toggle-wrap{padding:16px 0 0;}
+.avail-toggle-label{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;}
+.avail-toggle{display:flex;gap:8px;}
+.av-opt{flex:1;padding:10px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;border:0.5px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--surface);color:var(--text2);}
+.av-opt.on.green{background:rgba(52,199,89,0.1);border-color:rgba(52,199,89,0.3);color:var(--green);}
+.av-opt.on.orange{background:rgba(255,149,0,0.1);border-color:rgba(255,149,0,0.3);color:var(--orange);}
+/* Reviews */
+.rev-item{padding:13px 0;border-bottom:0.5px solid var(--border);}
+.rev-item:last-child{border:none;}
+.rev-top{display:flex;justify-content:space-between;margin-bottom:5px;}
+.rev-name{font-size:14px;font-weight:600;}
+.rev-stars{display:flex;gap:1px;margin-top:2px;}
+.rev-date{font-size:12px;color:var(--text3);}
+.rev-text{font-size:14px;color:var(--text2);line-height:1.5;}
+/* Profile action bar */
+.pact-bar{position:fixed;bottom:49px;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:10px 16px 12px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-top:0.5px solid var(--border);display:flex;gap:8px;z-index:50;}
+.pa-msg{flex:2;padding:12px;border-radius:10px;background:var(--purple);border:none;font-family:inherit;font-size:15px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+.pa-call{flex:1;padding:12px;border-radius:10px;background:var(--surface);border:0.5px solid var(--border2);font-family:inherit;font-size:15px;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+
+/* ── CHAT ── */
+.chat-bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 12px;height:44px;gap:10px;}
+.chat-av-sm{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.chat-info-name{font-size:14px;font-weight:600;}
+.chat-status{font-size:12px;color:var(--green);}
+.chat-rep{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-family:inherit;font-size:12px;}
+.chat-msgs{padding:12px 16px;display:flex;flex-direction:column;gap:5px;padding-bottom:80px;background:var(--surface);min-height:calc(100vh - 130px);}
+.cmsg{max-width:72%;}
+.cmsg.them{align-self:flex-start;}
+.cmsg.me{align-self:flex-end;}
+.cbub{padding:9px 13px;border-radius:18px;font-size:15px;line-height:1.45;}
+.cmsg.them .cbub{background:#fff;color:var(--text1);border-bottom-left-radius:4px;border:0.5px solid var(--border);}
+.cmsg.me .cbub{background:var(--purple);color:#fff;border-bottom-right-radius:4px;}
+.ctime{font-size:11px;color:var(--text3);margin-top:3px;padding:0 2px;}
+.cmsg.me .ctime{text-align:right;}
+.chat-inp-wrap{position:fixed;bottom:49px;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:8px 12px 10px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-top:0.5px solid var(--border);display:flex;align-items:center;gap:8px;z-index:50;}
+.chat-inp{flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:20px;padding:9px 15px;color:var(--text1);font-family:inherit;font-size:15px;outline:none;}
+.chat-send{width:34px;height:34px;border-radius:50%;background:var(--purple);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── FEED ── */
+.feed-screen{background:var(--surface);}
+.feed-topbar{position:sticky;top:0;z-index:50;background:var(--topbar);padding:0 16px;height:44px;display:flex;align-items:center;}
+.feed-topbar-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;}
+
+/* Slideshow */
+.slideshow-wrap{position:relative;margin:0;overflow:hidden;background:#000;}
+.slideshow-track{display:flex;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);}
+.slide{flex-shrink:0;width:390px;height:200px;display:flex;align-items:flex-end;position:relative;overflow:hidden;}
+.slide-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.slide-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0) 60%);}
+.slide-content{position:relative;z-index:2;padding:16px 18px;}
+.slide-brand{font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.slide-title{font-size:18px;font-weight:700;color:#fff;line-height:1.3;}
+.slide-sub{font-size:13px;color:rgba(255,255,255,0.75);margin-top:3px;}
+.slide-badge{display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-top:6px;}
+.slide-dots{display:flex;justify-content:center;gap:5px;padding:8px 0;background:#000;}
+.slide-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);transition:all 0.2s;cursor:pointer;}
+.slide-dot.on{background:#fff;width:18px;border-radius:3px;}
+
+/* Feed cards */
+.feed-sec-hdr{padding:16px 16px 10px;font-size:13px;font-weight:600;color:var(--text2);}
+.feed-list{padding:0 16px 80px;display:flex;flex-direction:column;gap:10px;}
+.feed-card{background:var(--card);border-radius:12px;overflow:hidden;border:0.5px solid var(--border);}
+.feed-card-header{padding:12px 14px 10px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border);}
+.feed-card-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.feed-card-dot-red{background:var(--red);}
+.feed-card-dot-orange{background:var(--orange);}
+.feed-card-dot-blue{background:var(--blue);}
+.feed-card-dot-green{background:var(--green);}
+.feed-card-source{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
+.feed-card-time{margin-left:auto;font-size:11px;color:var(--text3);}
+.feed-card-body{padding:12px 14px;}
+.feed-card-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:5px;}
+.feed-card-text{font-size:14px;color:var(--text2);line-height:1.5;}
+.feed-card-tag{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+.tag-red{background:rgba(255,59,48,0.1);color:var(--red);}
+.tag-orange{background:rgba(255,149,0,0.1);color:var(--orange);}
+.tag-blue{background:rgba(0,122,255,0.1);color:var(--blue);}
+.tag-green{background:rgba(52,199,89,0.1);color:var(--green);}
+.tag-purple{background:rgba(124,58,237,0.1);color:var(--purple);}
+
+/* ── ADMIN ── */
+.admin-bar{background:var(--topbar);padding:0 16px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.admin-title{font-size:17px;font-weight:700;color:#fff;}
+.admin-sub{font-size:12px;color:rgba(255,255,255,0.4);}
+.astat-row{display:flex;gap:8px;padding:12px 16px;background:var(--surface);}
+.astat{flex:1;background:#fff;border-radius:12px;padding:12px;text-align:center;border:0.5px solid var(--border);}
+.astat-n{font-size:20px;font-weight:700;}
+.astat-l{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;}
+.admin-rows{padding:0 16px 80px;background:var(--surface);}
+.arow{background:#fff;border-radius:12px;padding:13px;margin-bottom:10px;border:0.5px solid var(--border);}
+.arow-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.arow-name{font-size:15px;font-weight:600;}
+.arow-loc{font-size:13px;color:var(--text3);margin-top:2px;}
+.sbadge{padding:4px 9px;border-radius:999px;font-size:11px;font-weight:600;}
+.sb-ok{background:rgba(52,199,89,0.1);color:#34c759;}
+.sb-end{background:rgba(255,59,48,0.1);color:#ff3b30;}
+.arow-stats{display:flex;gap:18px;margin-top:10px;}
+.av{font-size:14px;font-weight:600;}
+.al{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-top:1px;}
+
+/* ── TAB BAR ── */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;height:49px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-top:0.5px solid var(--border);display:flex;align-items:center;z-index:100;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:5px 0;}
+.tab svg{width:22px;height:22px;stroke:var(--text3);fill:none;transition:stroke 0.15s;}
+.tab.on svg{stroke:var(--purple);}
+.tab-lbl{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:0.3px;text-transform:uppercase;transition:color 0.15s;}
+.tab.on .tab-lbl{color:var(--purple);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LOADER -->
+<div id="loader">
+  <div id="nodeAnim" style="width:160px;height:160px;margin-bottom:24px;position:relative;">
+    <canvas id="loaderCanvas" width="160" height="160" style="position:absolute;inset:0;"></canvas>
+    <div id="loaderPulse" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;width:60px;height:60px;border-radius:50%;border:1px solid rgba(124,58,237,0.3);animation:ringPulse 2s ease-in-out infinite;"></div>
+        <div style="position:absolute;width:40px;height:40px;border-radius:50%;border:1px solid rgba(124,58,237,0.5);animation:ringPulse 2s ease-in-out infinite 0.3s;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#e8d0ff,#7c3aed);animation:nodePulse 2s ease-in-out infinite;box-shadow:0 0 30px rgba(124,58,237,0.6);"></div>
+      </div>
+    </div>
+  </div>
+  <div class="loader-word">NODE</div>
+  <div class="loader-sub">Local Business Marketplace</div>
+  <div class="loader-hello" id="loaderHello"></div>
+
+</div>
+
+<!-- SIGN UP -->
+<div id="signupScreen">
+  <button class="su-back" onclick="closeSignup()">
+    <svg width="8" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,1 1,7 7,13"/></svg>
+    Back
+  </button>
+  <!-- Step 0: Role selection -->
+  <div id="suStep0">
+    <div class="su-title">Join NODE</div>
+    <div class="su-sub">Tell us who you are</div>
+    <div class="role-select">
+      <div class="role-opt" id="roleConsumer" onclick="selectRole('consumer')">
+        <div class="role-opt-title">Looking for a Service</div>
+        <div class="role-opt-sub">Find and connect with trusted local service providers</div>
+      </div>
+      <div class="role-opt" id="roleSP" onclick="selectRole('sp')">
+        <div class="role-opt-title">Service Provider</div>
+        <div class="role-opt-sub">I have a provider code from NODE</div>
+      </div>
+    </div>
+    <button class="su-submit" onclick="proceedRole()">Continue</button>
+  </div>
+  <!-- Step 1: Consumer details -->
+  <div id="suStep1" style="display:none;">
+    <div class="su-title">Create Account</div>
+    <div class="su-sub">Join NODE — find trusted local services</div>
+    <div class="su-label">First Name</div>
+    <input class="su-input" id="suFirst" type="text" placeholder="e.g. Damian">
+    <div class="su-label">Last Name</div>
+    <input class="su-input" id="suLast" type="text" placeholder="e.g. Newman">
+    <div class="su-label">Town / Location</div>
+    <input class="su-input" id="suTown" type="text" placeholder="e.g. Malmesbury">
+    <div class="su-label">Cellphone Number</div>
+    <input class="su-input" id="suPhone" type="tel" placeholder="+27 76 000 0000">
+    <button class="su-otp-btn" onclick="sendOTP()">Send OTP</button>
+  </div>
+  <!-- Step 2: OTP -->
+  <div id="suStep2" style="display:none;">
+    <div class="su-title">Verify Number</div>
+    <div class="su-sub" id="suOtpSub">Enter the OTP sent to your number</div>
+    <div class="su-demo-otp" id="suDemoOtp"></div>
+    <div class="su-label">Enter OTP</div>
+    <div class="otp-inputs">
+      <input class="otp-box" id="otp0" maxlength="1" type="tel" oninput="otpMove(0,1)">
+      <input class="otp-box" id="otp1" maxlength="1" type="tel" oninput="otpMove(1,2)">
+      <input class="otp-box" id="otp2" maxlength="1" type="tel" oninput="otpMove(2,3)">
+      <input class="otp-box" id="otp3" maxlength="1" type="tel" oninput="otpMove(3,4)">
+      <input class="otp-box" id="otp4" maxlength="1" type="tel" oninput="otpMove(4,5)">
+      <input class="otp-box" id="otp5" maxlength="1" type="tel" oninput="otpMove(5,null)">
+    </div>
+    <div class="su-otp-err" id="otpErr" style="display:none;">Incorrect OTP. Please try again.</div>
+    <button class="su-submit" onclick="verifyOTP()">Verify & Create Account</button>
+    <button class="su-resend" onclick="sendOTP()">Resend OTP</button>
+  </div>
+  <!-- SP Code step -->
+  <div id="suStepSP" style="display:none;">
+    <div class="su-title">Service Provider</div>
+    <div class="su-sub">Enter your unique NODE provider code</div>
+    <div class="sp-code-wrap">
+      <input class="sp-code-input" id="spCodeInput" type="text" placeholder="NODE-XXXX" maxlength="10">
+    </div>
+    <div class="sp-code-err" id="spCodeErr" style="display:none;">Invalid code. Contact NODE support to get your provider code.</div>
+    <div class="sp-code-hint">Your code was provided by NODE during onboarding</div>
+    <button class="su-submit" style="margin-top:20px;" onclick="verifySPCode()">Access My Profile</button>
+  </div>
+</div>
+
+<!-- STORY -->
+<div id="storyOverlay">
+  <div class="story-box">
+    <div class="story-timer-bar"><div class="story-timer-fill" id="storyFill" style="width:0%;"></div></div>
+    <button class="story-close" onclick="closeStory()">×</button>
+    <div class="story-biz-name" id="storyBizName"></div>
+    <div class="story-content" id="storyContent"></div>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div id="filterPanel">
+  <div class="filter-overlay" onclick="closeFilter()"></div>
+  <div class="filter-sheet">
+    <div class="filter-handle"></div>
+    <div class="filter-title">Filter Providers</div>
+    <div class="filter-sec-label">Service / Occupation</div>
+    <div class="filter-input-wrap">
+      <input class="filter-input" id="filterService" placeholder="e.g. welder, electrician..." autocomplete="off" oninput="suggestService(this.value)">
+      <div class="suggest-list" id="serviceSuggest"></div>
+    </div>
+    <div class="filter-sec-label">Town / Location</div>
+    <div class="filter-input-wrap">
+      <input class="filter-input" id="filterTown" placeholder="e.g. Malmesbury..." autocomplete="off" oninput="suggestTown(this.value)">
+      <div class="suggest-list" id="townSuggest"></div>
+    </div>
+    <button class="filter-apply" onclick="applyFilter()">Apply Filter</button>
+    <button class="filter-clear" onclick="clearFilter()">Clear All</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+
+  <!-- HOME -->
+  <div class="screen on" id="s-home">
+    <div class="topbar">
+      <div class="topbar-row">
+        <div class="topbar-title">NODE</div>
+        <div class="topbar-right">
+          <button class="filter-btn" onclick="openFilter()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            Filter
+          </button>
+          <canvas id="nodeTopbar" width="36" height="36"></canvas>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input type="text" placeholder="Search businesses, skills...">
+        </div>
+      </div>
+      <div class="pills-row">
+        <button class="pill on" onclick="fc(this,'All')">All</button>
+        <button class="pill" onclick="fc(this,'Weld')">Welding</button>
+        <button class="pill" onclick="fc(this,'Mech')">Mechanics</button>
+        <button class="pill" onclick="fc(this,'Salon')">Salons</button>
+        <button class="pill" onclick="fc(this,'Tax')">Tax</button>
+        <button class="pill" onclick="fc(this,'Build')">Builders</button>
+        <button class="pill" onclick="fc(this,'Plumb')">Plumbers</button>
+        <button class="pill" onclick="fc(this,'Elec')">Electrical</button>
+      </div>
+    </div>
+    <div class="sec-hdr" id="homeSecHdr">Near You · Malmesbury</div>
+    <div class="biz-list" id="bizList"></div>
+    <div style="height:60px;"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="s-profile">
+    <div class="profile-nav">
+      <button class="back-btn" onclick="goHome()">
+        <svg width="8" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,1 1,7 7,13"/></svg>
+        Back
+      </button>
+      <div class="pnav-name" id="pNavN"></div>
+      <button class="rep-btn" onclick="alert('Reported')">Report</button>
+    </div>
+    <div id="profileBody"></div>
+    <div style="height:90px;"></div>
+    <div class="pact-bar">
+      <button class="pa-msg" onclick="goChat()">
+        <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Message
+      </button>
+      <button class="pa-call" onclick="callSP()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call
+      </button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="screen" id="s-chat">
+    <div class="chat-bar">
+      <button class="back-btn" onclick="goProfile()" style="color:var(--purple);">
+        <svg width="8" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,1 1,7 7,13"/></svg>
+      </button>
+      <div class="chat-av-sm" id="cAv"></div>
+      <div><div class="chat-info-name" id="cName"></div><div class="chat-status">Active now</div></div>
+      <button class="chat-rep" onclick="alert('Reported')">Report</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="cmsg them"><div class="cbub">Hello! How can I help you today? 👋</div><div class="ctime">09:14</div></div>
+      <div class="cmsg me"><div class="cbub">Hi, I need a quote for an aluminium security gate — double door, 2.4m wide.</div><div class="ctime">09:16</div></div>
+      <div class="cmsg them"><div class="cbub">Sure! Send the measurements and I'll get a quote within the hour.</div><div class="ctime">09:17</div></div>
+      <div class="cmsg me"><div class="cbub">Width 2.4m, height 1.8m. Available this week?</div><div class="ctime">09:19</div></div>
+      <div class="cmsg them"><div class="cbub">Available Thursday afternoon. Quote: R3,200 — materials + installation. ✅</div><div class="ctime">09:21</div></div>
+    </div>
+    <div class="chat-inp-wrap">
+      <input class="chat-inp" id="chatIn" placeholder="Message...">
+      <button class="chat-send" onclick="sendMsg()">
+        <svg width="13" height="13" fill="#fff" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div class="screen feed-screen" id="s-feed">
+    <div class="feed-topbar"><div class="feed-topbar-title">Feed</div></div>
+    <!-- Slideshow -->
+    <div class="slideshow-wrap">
+      <div class="slideshow-track" id="slideshowTrack"></div>
+      <div class="slide-dots" id="slideDots"></div>
+    </div>
+    <!-- Community feed -->
+    <div class="feed-sec-hdr">Community Notices</div>
+    <div class="feed-list" id="feedList"></div>
+    <div style="height:60px;"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="screen" id="s-admin">
+    <div class="admin-bar"><div class="admin-title">Dashboard</div><div class="admin-sub">Quality Governance</div></div>
+    <div class="astat-row">
+      <div class="astat"><div class="astat-n" style="color:#34c759;">9</div><div class="astat-l">Active</div></div>
+      <div class="astat"><div class="astat-n" style="color:#ff3b30;">1</div><div class="astat-l">Endangered</div></div>
+      <div class="astat"><div class="astat-n" style="color:#7c3aed;">4</div><div class="astat-l">Verified</div></div>
+      <div class="astat"><div class="astat-n">10</div><div class="astat-l">Total</div></div>
+    </div>
+    <div class="sec-hdr" style="background:var(--surface);">All Providers</div>
+    <div class="admin-rows" id="adminRows"></div>
+  </div>
+
+  <!-- TAB BAR -->
+  <nav class="tabbar">
+    <div class="tab on" id="t-home" onclick="goTab('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-lbl">Explore</span>
+    </div>
+    <div class="tab" id="t-feed" onclick="goTab('feed')">
+      <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+      <span class="tab-lbl">Feed</span>
+    </div>
+    <div class="tab" id="t-chat" onclick="goTab('chat')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="tab-lbl">Messages</span>
+    </div>
+    <div class="tab" id="t-admin" onclick="goTab('admin')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="tab-lbl">Admin</span>
+    </div>
+    <div class="tab" onclick="alert('Your profile')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="tab-lbl">Profile</span>
+    </div>
+  </nav>
+
+</div><!-- mainApp -->
+</div><!-- app -->
+
+<script>
+// ═══════════ ANIMATION ═══════════
+const ARMS=[{angle:-88,length:0.52,drift:0.06,sign:1,width:1.4},{angle:210,length:0.50,drift:0.05,sign:-1,width:1.3},{angle:22,length:0.51,drift:0.05,sign:1,width:1.35},{angle:-160,length:0.38,drift:0.04,sign:-1,width:0.7},{angle:75,length:0.36,drift:0.03,sign:1,width:0.65},{angle:145,length:0.37,drift:0.04,sign:-1,width:0.7},{angle:-42,length:0.35,drift:0.03,sign:1,width:0.6}];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const map=(v,a,b,c,d)=>c+(d-c)*clamp((v-a)/(b-a),0,1);
+const eio=t=>t<0.5?2*t*t:-1+(4-2*t)*t;
+const eo=t=>1-Math.pow(1-t,3);
+function bz(t,sx,sy,mx,my,ex,ey){const m=1-t;return[m*m*sx+2*m*t*mx+t*t*ex,m*m*sy+2*m*t*my+t*t*ey];}
+function drawNode(cv,prog,sc=1){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2,t=prog;
+  ctx.clearRect(0,0,W,H);
+  ARMS.forEach((arm,i)=>{
+    const stg=i*0.038,aP=eio(clamp(map(t,stg,0.38+stg*0.5,0,1),0,1));
+    if(aP<=0)return;
+    const ang=(arm.angle*Math.PI)/180,dL=Math.sqrt(W*W+H*H)/2,L=dL*arm.length*sc;
+    const sx=cx+Math.cos(ang)*L,sy=cy+Math.sin(ang)*L,pa=ang+Math.PI/2,mL=L*0.42;
+    const mx=cx+Math.cos(ang)*mL+Math.cos(pa)*(W*arm.drift*arm.sign),my=cy+Math.sin(ang)*mL+Math.sin(pa)*(H*arm.drift*arm.sign);
+    const pts=[];for(let k=0;k<=48;k++)pts.push(bz(k/48,sx,sy,mx,my,cx,cy));
+    const eI=Math.floor(aP*48);if(eI<1)return;
+    const seg=pts.slice(0,eI+1);
+    const g=ctx.createLinearGradient(sx,sy,cx,cy);
+    g.addColorStop(0,'rgba(255,255,255,0.55)');g.addColorStop(0.55,'rgba(210,180,255,0.75)');g.addColorStop(1,'rgba(180,100,255,0)');
+    ctx.beginPath();ctx.moveTo(seg[0][0],seg[0][1]);seg.forEach(([x,y])=>ctx.lineTo(x,y));
+    ctx.strokeStyle=g;ctx.lineWidth=arm.width;ctx.lineCap='round';ctx.stroke();
+    if(aP<0.98){const sp=eio(aP);const[spx,spy]=bz(sp,sx,sy,mx,my,cx,cy);ctx.beginPath();ctx.arc(spx,spy,1.6,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();}
+  });
+  const cP=eo(clamp(map(t,0.35,0.55,0,1),0,1));
+  if(cP>0){
+    const r1=40*cP,r2=18*cP,r3=7*cP;
+    const g1=ctx.createRadialGradient(cx,cy,0,cx,cy,r1);g1.addColorStop(0,'rgba(160,80,255,0.22)');g1.addColorStop(1,'rgba(80,20,180,0)');
+    ctx.beginPath();ctx.arc(cx,cy,r1,0,Math.PI*2);ctx.fillStyle=g1;ctx.fill();
+    const g2=ctx.createRadialGradient(cx,cy,0,cx,cy,r2);g2.addColorStop(0,'rgba(200,140,255,0.7)');g2.addColorStop(0.6,'rgba(160,80,255,0.3)');g2.addColorStop(1,'rgba(120,40,220,0)');
+    ctx.beginPath();ctx.arc(cx,cy,r2,0,Math.PI*2);ctx.fillStyle=g2;ctx.fill();
+    const g3=ctx.createRadialGradient(cx-r3*0.2,cy-r3*0.2,0,cx,cy,r3);
+    g3.addColorStop(0,'#fff');g3.addColorStop(0.4,'#e8d0ff');g3.addColorStop(0.75,'#b464ff');g3.addColorStop(1,'#8c3cf0');
+    ctx.beginPath();ctx.arc(cx,cy,r3,0,Math.PI*2);ctx.fillStyle=g3;ctx.shadowBlur=12*cP;ctx.shadowColor='rgba(180,100,255,0.9)';ctx.fill();ctx.shadowBlur=0;
+  }
+  const rP=map(t,0.52,0.78,0,1);
+  if(rP>0&&rP<1){
+    const mR=Math.sqrt(W*W+H*H)*0.6;
+    ctx.beginPath();ctx.arc(cx,cy,rP*mR,0,Math.PI*2);ctx.strokeStyle=`rgba(160,80,255,${clamp(1-rP*1.15,0,0.55)})`;ctx.lineWidth=Math.max(0.5,2.5*(1-rP));ctx.stroke();
+    const r2=rP-0.06;if(r2>0){ctx.beginPath();ctx.arc(cx,cy,r2*mR,0,Math.PI*2);ctx.strokeStyle=`rgba(200,140,255,${clamp(1-r2*1.2,0,0.35)})`;ctx.lineWidth=Math.max(0.4,1.5*(1-r2));ctx.stroke();}
+  }
+}
+const lc=document.getElementById('loaderCanvas');
+const TOTAL=3200;
+let lRaf=null, lStart=null;
+
+function loaderFrame(ts){
+  if(!lStart) lStart=ts;
+  const elapsed=ts-lStart;
+  const p=Math.min(elapsed/TOTAL,1);
+  drawNode(lc,p,1.0);
+  if(p<1){
+    lRaf=requestAnimationFrame(loaderFrame);
+  } else {
+    setTimeout(enterApp,400);
+  }
+}
+lRaf=requestAnimationFrame(loaderFrame);
+
+// ── USER STATE ──
+let isSignedIn=!!localStorage.getItem('nodeUser');
+let userName=localStorage.getItem('nodeUser')||'';
+let selectedRole='';
+
+function initLoader(){
+  const h=document.getElementById('loaderHello');
+  if(h && isSignedIn) h.textContent='Hello '+userName+' 👋';
+}
+initLoader();
+
+function enterApp(){
+  cancelAnimationFrame(lRaf);
+  document.getElementById('loader').classList.add('out');
+  setTimeout(()=>{
+    document.getElementById('loader').style.display='none';
+    document.getElementById('mainApp').style.display='block';
+    renderBiz(BIZ);renderAdmin();renderFeed();startTopbar();
+  },600);
+};
+
+function openSignup(){
+  document.getElementById('suStep0').style.display='block';
+  document.getElementById('suStep1').style.display='none';
+  document.getElementById('suStep2').style.display='none';
+  document.getElementById('suStepSP').style.display='none';
+  document.querySelectorAll('.role-opt').forEach(r=>r.classList.remove('selected'));
+  selectedRole='';
+  document.getElementById('signupScreen').classList.add('show');
+};
+
+function closeSignup(){document.getElementById('signupScreen').classList.remove('show');}
+
+function selectRole(r){
+  selectedRole=r;
+  document.querySelectorAll('.role-opt').forEach(el=>el.classList.remove('selected'));
+  document.getElementById(r==='consumer'?'roleConsumer':'roleSP').classList.add('selected');
+}
+
+function proceedRole(){
+  if(!selectedRole){alert('Please select who you are.');return;}
+  document.getElementById('suStep0').style.display='none';
+  if(selectedRole==='consumer'){document.getElementById('suStep1').style.display='block';}
+  else{document.getElementById('suStepSP').style.display='block';}
+}
+
+// SP Codes — demo codes for each SP
+const SP_CODES={
+  'NODE-JB26':{id:1,name:'Jacob'},
+  'NODE-CA26':{id:2,name:'Calvin'},
+  'NODE-GN26':{id:3,name:'Gloria'},
+  'NODE-ST26':{id:4,name:'Stefan'},
+  'NODE-RP26':{id:5,name:'Richard'},
+  'NODE-MK26':{id:6,name:'Michael'},
+  'NODE-FC26':{id:7,name:'Faizel'},
+  'NODE-SP26':{id:8,name:'Shaun'},
+  'NODE-MF26':{id:9,name:'Fatima'},
+  'NODE-SR26':{id:10,name:'Simon'},
+};
+
+function verifySPCode(){
+  const code=document.getElementById('spCodeInput').value.trim().toUpperCase();
+  const err=document.getElementById('spCodeErr');
+  if(SP_CODES[code]){
+    const sp=SP_CODES[code];
+    localStorage.setItem('nodeUser',sp.name);
+    localStorage.setItem('nodeRole','sp');
+    localStorage.setItem('spId',sp.id);
+    isSignedIn=true;userName=sp.name;
+    err.style.display='none';
+    document.getElementById('signupScreen').classList.remove('show');
+    document.getElementById('loaderHello').textContent='Hello '+sp.name+' 👋';
+    document.getElementById('signupTrigger').style.display='none';
+    alert('Welcome back, '+sp.name+'! Your provider profile is ready. Tap Connect to enter.');
+  } else {
+    err.style.display='block';
+  }
+}
+
+let demoOTP='';
+function sendOTP(){
+  const phone=document.getElementById('suPhone').value.trim();
+  const first=document.getElementById('suFirst').value.trim();
+  if(!first){alert('Please enter your first name.');return;}
+  if(!phone||phone.length<10){alert('Please enter a valid cellphone number.');return;}
+  demoOTP=Math.floor(100000+Math.random()*900000).toString();
+  document.getElementById('suStep1').style.display='none';
+  document.getElementById('suStep2').style.display='block';
+  document.getElementById('suOtpSub').textContent='OTP sent to '+phone;
+  document.getElementById('suDemoOtp').innerHTML='<strong>Demo Mode OTP:</strong> <strong style="color:#a78bfa;font-size:20px;letter-spacing:6px;">'+demoOTP+'</strong>';
+  document.getElementById('otp0').focus();
+}
+
+function otpMove(cur,next){
+  const el=document.getElementById('otp'+cur);
+  if(el.value.length===1&&next!==null)document.getElementById('otp'+next).focus();
+}
+
+function verifyOTP(){
+  const entered=[0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
+  if(entered===demoOTP){
+    const first=document.getElementById('suFirst').value.trim();
+    localStorage.setItem('nodeUser',first);
+    localStorage.setItem('nodeRole','consumer');
+    isSignedIn=true;userName=first;
+    document.getElementById('signupScreen').classList.remove('show');
+    document.getElementById('loaderHello').textContent='Hello '+first+' 👋';
+    document.getElementById('signupTrigger').style.display='none';
+    document.getElementById('otpErr').style.display='none';
+    [0,1,2,3,4,5].forEach(i=>document.getElementById('otp'+i).value='');
+    alert('Welcome to NODE, '+first+'! Tap Connect to enter.');
+  } else {
+    document.getElementById('otpErr').style.display='block';
+    [0,1,2,3,4,5].forEach(i=>document.getElementById('otp'+i).value='');
+    document.getElementById('otp0').focus();
+  }
+}
+
+// ── TOPBAR ANIMATION (canvas) ──
+const tc=document.getElementById('nodeTopbar');
+let tbRaf=null,tbStart=null;
+const TB=10000;
+
+function drawNodeCanvas(cv,prog){
+  const ctx=cv.getContext('2d');
+  if(!ctx)return;
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2,t=prog;
+  ctx.clearRect(0,0,W,H);
+  ARMS.forEach((arm,i)=>{
+    const stg=i*0.038,aP=eio(clamp(map(t,stg,0.38+stg*0.5,0,1),0,1));
+    if(aP<=0)return;
+    const ang=(arm.angle*Math.PI)/180,dL=Math.sqrt(W*W+H*H)/2,L=dL*arm.length*0.28;
+    const sx=cx+Math.cos(ang)*L,sy=cy+Math.sin(ang)*L,pa=ang+Math.PI/2,mL=L*0.42;
+    const mx=cx+Math.cos(ang)*mL+Math.cos(pa)*(W*arm.drift*arm.sign);
+    const my=cy+Math.sin(ang)*mL+Math.sin(pa)*(H*arm.drift*arm.sign);
+    const pts=[];for(let k=0;k<=24;k++)pts.push(bz(k/24,sx,sy,mx,my,cx,cy));
+    const eI=Math.floor(aP*24);if(eI<1)return;
+    const seg=pts.slice(0,eI+1);
+    const g=ctx.createLinearGradient(sx,sy,cx,cy);
+    g.addColorStop(0,'rgba(255,255,255,0.5)');g.addColorStop(1,'rgba(180,100,255,0)');
+    ctx.beginPath();ctx.moveTo(seg[0][0],seg[0][1]);
+    seg.forEach(([x,y])=>ctx.lineTo(x,y));
+    ctx.strokeStyle=g;ctx.lineWidth=0.6;ctx.lineCap='round';ctx.stroke();
+  });
+  const cP=eo(clamp(map(t,0.35,0.55,0,1),0,1));
+  if(cP>0){
+    const r=4*cP;
+    const g=ctx.createRadialGradient(cx-r*0.2,cy-r*0.2,0,cx,cy,r);
+    g.addColorStop(0,'#fff');g.addColorStop(0.5,'#e8d0ff');g.addColorStop(1,'#8c3cf0');
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g;
+    ctx.shadowBlur=6*cP;ctx.shadowColor='rgba(180,100,255,0.9)';ctx.fill();ctx.shadowBlur=0;
+  }
+}
+
+function tbFrame(ts){if(!tbStart)tbStart=ts;const p=Math.min(((ts-tbStart)%TB)/TOTAL,1);drawNodeCanvas(tc,p);tbRaf=requestAnimationFrame(tbFrame);}
+function startTopbar(){if(tbRaf)cancelAnimationFrame(tbRaf);tbStart=null;tbRaf=requestAnimationFrame(tbFrame);}
+
+// ═══════════ SEARCH DATA ═══════════
+const SERVICES_LIST=['Accounting','Air Conditioning','Alarm Installation','Aluminium Fabrication','Appliance Repair','Artificial Turf','Asphalt Paving','Bakery','Bathroom Renovation','Beard Grooming','Blinds','Bookkeeping','Brake Service','Braiding','Building Plans','Burglar Bars','Cabinet Making','Carpet Cleaning','Carport','Car Wash','Catering','Ceiling Installation','Cleaning','Clutch Replacement','COC Certificate','Concrete','Cornrows','Corporate Catering','Damp Proofing','DB Board','Deck','Deep Cleaning','Diesel Engine','Door Repair','Drain Unblocking','Dreadlocks','Driveway Paving','Electrician','Epoxy Flooring','Event Catering','Eyebrow Threading','Eyelash Extensions','Fencing','Financial Statements','Flooring','Furniture Repair','Garden Services','Gate Motor','Gate Repair','Geyser Installation','Geyser Repair','Glass Replacement','Grass Cutting','Gutter Cleaning','Hair Braiding','Hair Extensions','Handyman','Home Automation','Interior Design','Interior Painting','Irrigation','Kitchen Fitting','Landscaping','Lawn Care','Leak Detection','Lighting Installation','Locksmith','Logo Design','Manicure','Masonry','Mechanic','Metal Fabrication','Nail Art','Nails','Odd Jobs','Painting','Payroll','Pedicure','Pest Control','Photography','Plastering','Plumbing','Pool Maintenance','Power Washing','Roof Repairs','Roofing','SARS eFiling','Security Fencing','Security Gate','Skim Coat','Solar Installation','Steel Fabrication','Tax Returns','Tiling','Toilet Repairs','Tree Felling','Tyre Fitting','VAT Registration','Waterproofing','Welding','Wheel Alignment','Window Cleaning','Wood Work'];
+const TOWNS_LIST=["Aasvogelskloof","Aberdeen","Acornhoek","Adelaide","Aggeneys","Alberton","Alicedale","Aliwal North","Alldays","Arniston","Ashton","Augrabies","Babelegi","Balfour","Ballito","Balmoral","Barberton","Barkly East","Barkly West","Barrydale","Bathurst","Beacon Bay","Beaufort West","Bedford","Belfast","Benoni","Bergville","Bethal","Bethlehem","Bettys Bay","Bhisho","Bloemfontein","Bloemhof","Boksburg","Bonnievale","Botshabelo","Brakpan","Brandfort","Bredasdorp","Brits","Bronkhorstspruit","Bultfontein","Bulwer","Burgersdorp","Butterworth","Caledon","Calitzdorp","Calvinia","Cape Town","Carletonville","Carnarvon","Carolina","Cathcart","Centurion","Ceres","Christiana","Clanwilliam","Clarens","Clocolan","Colesberg","Coligny","Constantia","Cookhouse","Darling","De Aar","De Doorns","Delmas","Dendron","Despatch","Dimbaza","Dordrecht","Douglas","Dundee","Durban","Durbanville","East London","Edenvale","Elgin","Elliot","Empangeni","Ermelo","Estcourt","Evander","Fauresmith","Ficksburg","Fish Hoek","Fort Beaufort","Fouriesburg","Fraserburg","Gansbaai","George","Giyani","Glencoe","Graaff-Reinet","Grabouw","Grahamstown","Greytown","Groblersdal","Groblershoop","Groot Brakrivier","Hartswater","Heidelberg","Heilbron","Hermanus","Hobhouse","Hoedspruit","Hogsback","Hoopstad","Hopefield","Hopetown","Humansdorp","Idutywa","Ikageng","Impendle","Indwe","Ixopo","Jacobsdal","Jagersfontein","Jan Kempdorp","Johannesburg","Joubertina","Kathu","Keimoes","Kimberley","Kirkwood","Klerksdorp","Knysna","Kokstad","Komaggas","Komani","Komatipoort","Kraaifontein","Kriel","Kroonstad","Krugersdorp","Kuruman","Ladismith","Ladybrand","Ladysmith","Laingsburg","Langebaan","Lebowakgomo","Lephalale","Lichtenburg","Louis Trichardt","Loxton","Lydenburg","Mabopane","Mafikeng","Magaliesburg","Mahikeng","Malmesbury","Mangaung","Manguzi","Margate","Marquard","Matatiele","Matjhabeng","Mbombela","McGregor","Meyerton","Middelburg","Midrand","Mkuze","Modimole","Modimolle","Mokopane","Montagu","Moorreesburg","Mossel Bay","Motherwell","Mount Ayliff","Mount Fletcher","Mount Frere","Mthatha","Musina","Nababeep","Napier","Nelspruit","Newcastle","Nigel","Nongoma","Noordhoek","Norvalspont","Nylstroom","Olifantshoek","Orania","Orkney","Oudtshoorn","Paarl","Parow","Paulpietersburg","Peddie","Phalaborwa","Phuthaditjhaba","Pietermaritzburg","Piketberg","Plettenberg Bay","Pofadder","Port Alfred","Port Edward","Port Elizabeth","Port Nolloth","Port Shepstone","Porterville","Potchefstroom","Pretoria","Prieska","Prince Albert","Queenstown","Rayton","Reitz","Richards Bay","Richmond","Riebeeck-Wes","Riebeek-Kasteel","Robertson","Rosendal","Rustenburg","Saldanha","Sasolburg","Schweizer-Reneke","Scottburgh","Senekal","Simons Town","Somerset East","Somerset West","Soshanguve","Soweto","Springbok","Springs","Standerton","Stellenbosch","Sterkstroom","Steynsrus","Stilbaai","Stutterheim","Swellendam","Tarkastad","Thabazimbi","Thohoyandou","Tshwane","Tulbagh","Tzaneen","Uitenhage","Ulundi","Umkomaas","Upington","Vaalwater","Van Reenen","Vanderbijlpark","Ventersburg","Vereeniging","Villiersdorp","Virginia","Volksrust","Vrede","Vredenburg","Vredendal","Vryburg","Vryheid","Wakkerstroom","Wartburg","Waterval Boven","Welkom","Wellington","Wepener","Westonaria","White River","Williston","Willowmore","Witsieshoek","Wolmaransstad","Worcester","Zeerust"];
+
+function fuzzy(q,list){if(!q||q.length<1)return[];const ql=q.toLowerCase();return list.filter(item=>{const s=item.toLowerCase();if(s.includes(ql))return true;let qi=0;for(let i=0;i<s.length&&qi<ql.length;i++){if(s[i]===ql[qi])qi++;}return qi===ql.length;}).slice(0,7);}
+function hl(text,q){if(!q)return text;const idx=text.toLowerCase().indexOf(q.toLowerCase());if(idx===-1)return text;return text.slice(0,idx)+'<span class="suggest-match">'+text.slice(idx,idx+q.length)+'</span>'+text.slice(idx+q.length);}
+function suggestService(v){const el=document.getElementById('serviceSuggest');const m=fuzzy(v,SERVICES_LIST);if(!m.length||!v){el.classList.remove('show');return;}el.innerHTML=m.map(x=>`<div class="suggest-item" onclick="selSvc('${x}')">${hl(x,v)}</div>`).join('');el.classList.add('show');}
+function suggestTown(v){const el=document.getElementById('townSuggest');const m=fuzzy(v,TOWNS_LIST);if(!m.length||!v){el.classList.remove('show');return;}el.innerHTML=m.map(x=>`<div class="suggest-item" onclick="selTown('${x}')">${hl(x,v)}</div>`).join('');el.classList.add('show');}
+function selSvc(v){document.getElementById('filterService').value=v;document.getElementById('serviceSuggest').classList.remove('show');}
+function selTown(v){document.getElementById('filterTown').value=v;document.getElementById('townSuggest').classList.remove('show');}
+function openFilter(){document.getElementById('filterPanel').classList.add('show');}
+function closeFilter(){document.getElementById('filterPanel').classList.remove('show');}
+function applyFilter(){
+  const s=document.getElementById('filterService').value.toLowerCase().trim();
+  const t=document.getElementById('filterTown').value.toLowerCase().trim();
+  let f=BIZ;
+  if(s)f=f.filter(b=>b.occ.toLowerCase().includes(s)||b.tags.some(x=>x.toLowerCase().includes(s))||b.services.some(x=>x.toLowerCase().includes(s)));
+  if(t)f=f.filter(b=>b.loc.toLowerCase().includes(t));
+  renderBiz(f);
+  document.getElementById('homeSecHdr').textContent=f.length+' result'+(f.length!==1?'s':'')+(t?' in '+document.getElementById('filterTown').value:'');
+  closeFilter();
+}
+function clearFilter(){document.getElementById('filterService').value='';document.getElementById('filterTown').value='';renderBiz(BIZ);document.getElementById('homeSecHdr').textContent='Near You · Malmesbury';closeFilter();}
+
+// ── STORY ──
+let storyTimer=null;
+function openStory(id){
+  const b=BIZ.find(x=>x.id===id);if(!b||!b.promo)return;
+  document.getElementById('storyBizName').textContent=b.name;
+  document.getElementById('storyContent').innerHTML=b.promo;
+  document.getElementById('storyOverlay').classList.add('show');
+  const fill=document.getElementById('storyFill');
+  fill.style.transition='none';fill.style.width='0%';
+  setTimeout(()=>{fill.style.transition='width 15s linear';fill.style.width='100%';},50);
+  storyTimer=setTimeout(closeStory,15000);
+}
+function closeStory(){document.getElementById('storyOverlay').classList.remove('show');if(storyTimer)clearTimeout(storyTimer);document.getElementById('storyFill').style.width='0%';}
+
+// ═══════════ BIZ DATA ═══════════
+const BIZ=[
+  {id:1,name:'J. Botha Welding',init:'JB',occ:'Welder & Metal Fabricator',loc:'Malmesbury',rating:4.8,revs:34,resp:'12 min',verified:true,sponsored:true,bg:'#2d1b69',fg:'#c4b5fd',avail:'green',tags:['Aluminium Gates','Security Fencing','Steel'],cat:'Weld',bio:'Specialising in aluminium security gates and bespoke metalwork. 12 years experience. All work guaranteed.',payment:['Cash','EFT'],svcType:['Call Out','Mobile','Emergency'],services:['Aluminium Gate Fabrication','Security Fencing','Mild Steel Welding','Stainless Steel','Structural Steel','Burglar Bars','Carport Structures','Trailer Repairs','Site Welding','Farm Equipment Repairs'],phone:'0721234567',hours:{Mon:'08:00–17:00',Tue:'08:00–17:00',Wed:'08:00–17:00',Thu:'08:00–17:00',Fri:'08:00–16:00',Sat:'09:00–13:00',Sun:'Closed'},afterhours:false,reviews:[{n:'Sarah M.',r:5,t:'Excellent work. On time and within budget.',d:'3 days ago'},{n:'Peter van W.',r:5,t:'Professional from start to finish.',d:'1 week ago'},{n:'Ashlea K.',r:4,t:'Good quality, slight delay but communicated well.',d:'2 weeks ago'}]},
+  {id:2,name:'Cape Auto Repairs',init:'CA',occ:'Motor Mechanic',loc:'Malmesbury',rating:4.6,revs:28,resp:'25 min',verified:true,sponsored:false,bg:'#0c2340',fg:'#7dd3fc',avail:'green',tags:['Diesel','Brakes','Electrical'],cat:'Mech',bio:'Qualified mechanic, 8 years experience. All makes and models. Quick turnaround guaranteed.',payment:['Cash','Card','EFT'],svcType:['Established','Call Out'],services:['Full Service','Brake Replacement','Diesel Engine Repair','Electrical Fault Finding','Suspension Repairs','Shock Absorbers','Clutch Replacement','Gearbox Service','Air Conditioning','Wheel Alignment'],phone:'0731234567',hours:{Mon:'07:30–17:30',Tue:'07:30–17:30',Wed:'07:30–17:30',Thu:'07:30–17:30',Fri:'07:30–16:30',Sat:'08:00–13:00',Sun:'Closed'},afterhours:true,reviews:[{n:'Johan S.',r:5,t:'Fixed my bakkie in one day. Fair and honest.',d:'5 days ago'},{n:'Nomsa T.',r:4,t:'Good service, will use again.',d:'2 weeks ago'}]},
+  {id:3,name:'Glamour Nails & Hair',init:'GN',occ:'Salon & Beauty',loc:'Malmesbury',rating:4.9,revs:62,resp:'8 min',verified:true,sponsored:false,bg:'#3b0764',fg:'#e9d5ff',avail:'green',tags:['Nails','Hair','Lashes'],cat:'Salon',bio:"Malmesbury's premier beauty salon. Walk-ins welcome.",payment:['Cash','Card'],svcType:['Established'],services:['Acrylic Nails','Gel Nails','Nail Art','Hair Braiding','Hair Extensions','Eyelash Extensions','Eyebrow Threading','Waxing','Facials','Manicure & Pedicure'],phone:'0741234567',hours:{Mon:'09:00–18:00',Tue:'09:00–18:00',Wed:'09:00–18:00',Thu:'09:00–18:00',Fri:'09:00–17:00',Sat:'08:00–16:00',Sun:'Closed'},afterhours:false,promo:`<div class="story-promo-title">☀️ Summer Special</div><div class="story-promo-sub">Vibrant summer colour nails — limited slots available this season.</div><div class="story-promo-badge">20% OFF Summer Colours</div>`,reviews:[{n:'Bianca R.',r:5,t:'Best nails in Malmesbury! Always professional.',d:'1 day ago'},{n:'Caitlyn P.',r:5,t:'Love this place. Book ahead — very busy!',d:'4 days ago'}]},
+  {id:4,name:'Swartland Tax Services',init:'ST',occ:'Tax Practitioner',loc:'Malmesbury',rating:4.7,revs:19,resp:'2 hrs',verified:true,sponsored:false,bg:'#002214',fg:'#6ee7b7',avail:'orange',tags:['SARS','VAT','Payroll'],cat:'Tax',bio:'Registered tax practitioner. Small business tax compliance, payroll, and SARS submissions.',payment:['Cash','EFT'],svcType:['Established','Mobile'],services:['Personal Tax Returns','Company Tax Filing','VAT Registration','VAT Returns','PAYE Registration','Payroll Processing','SARS eFiling','Tax Clearance Pin','Financial Statements','Bookkeeping'],phone:'0751234567',hours:{Mon:'08:00–17:00',Tue:'08:00–17:00',Wed:'08:00–17:00',Thu:'08:00–17:00',Fri:'08:00–16:00',Sat:'By Appointment',Sun:'Closed'},afterhours:false,reviews:[{n:'Deon F.',r:5,t:'Sorted out 3 years of SARS returns. Efficient.',d:'1 week ago'},{n:'Maria L.',r:4,t:'Reliable. Gets things done properly.',d:'3 weeks ago'}]},
+  {id:5,name:'Rapid Plumbers SA',init:'RP',occ:'Plumber',loc:'Riebeek-Kasteel',rating:4.3,revs:15,resp:'45 min',verified:false,sponsored:false,bg:'#0c1a2e',fg:'#93c5fd',avail:'green',tags:['Emergency','Geysers','Drains'],cat:'Plumb',bio:'24-hour emergency plumbing across the Swartland.',payment:['Cash','EFT'],svcType:['Call Out','Mobile','Emergency'],services:['Burst Pipe Repair','Geyser Installation','Geyser Repair','Drain Unblocking','Leak Detection','Toilet Repairs','Bathroom Fitting','Kitchen Plumbing','Irrigation','Pool Plumbing'],phone:'0761234567',hours:{Mon:'00:00–24:00',Tue:'00:00–24:00',Wed:'00:00–24:00',Thu:'00:00–24:00',Fri:'00:00–24:00',Sat:'00:00–24:00',Sun:'00:00–24:00'},afterhours:true,reviews:[{n:'Hannes B.',r:5,t:'Arrived within the hour on a Saturday.',d:'2 weeks ago'},{n:'Liezel M.',r:3,t:'Good work but took a while.',d:'1 month ago'}]},
+  {id:6,name:'MK Electrical',init:'MK',occ:'Electrician',loc:'Moorreesburg',rating:4.5,revs:22,resp:'30 min',verified:false,sponsored:false,bg:'#1c1400',fg:'#fde68a',avail:'green',tags:['Solar','Faults','COC'],cat:'Elec',bio:'Qualified electrician. Residential, commercial, and solar installations.',payment:['Cash','EFT'],svcType:['Onsite','Call Out','Emergency'],services:['Fault Finding','DB Board Upgrade','Circuit Breaker','Solar Installation','Inverter Setup','Lighting','Power Points','Geyser Wiring','COC Certificate','Outdoor Lighting'],phone:'0771234567',hours:{Mon:'07:00–17:00',Tue:'07:00–17:00',Wed:'07:00–17:00',Thu:'07:00–17:00',Fri:'07:00–16:00',Sat:'08:00–12:00',Sun:'Closed'},afterhours:false,reviews:[{n:'Andries V.',r:5,t:'Installed our solar system professionally.',d:'1 week ago'},{n:'Tracey G.',r:4,t:'Quick and reliable.',d:'3 weeks ago'}]},
+  {id:7,name:'Fresh Cuts Barbershop',init:'FC',occ:'Barber',loc:'Malmesbury',rating:4.4,revs:41,resp:'5 min',verified:false,sponsored:false,bg:'#0f1f00',fg:'#bef264',avail:'green',tags:['Fades','Beards','Kids'],cat:'Salon',bio:'The freshest cuts in Malmesbury. Walk in any time.',payment:['Cash','Card'],svcType:['Established'],services:['Skin Fade','Taper Fade','Beard Trim','Hair Design','Kids Haircut','Cornrows','Dreadlock Maintenance','Razor Line Up','Full Head Shave','Hair Wash'],phone:'0781234567',hours:{Mon:'08:00–18:00',Tue:'08:00–18:00',Wed:'08:00–18:00',Thu:'08:00–18:00',Fri:'08:00–18:00',Sat:'07:30–17:00',Sun:'Closed'},afterhours:false,reviews:[{n:'Ethan D.',r:5,t:"Best fade in town.",d:'2 days ago'},{n:'Gavin N.',r:4,t:'Good barber. Gets busy Saturdays.',d:'1 week ago'}]},
+  {id:8,name:'Swartland Painters',init:'SP',occ:'Painter & Decorator',loc:'Malmesbury',rating:4.1,revs:9,resp:'1 hr',verified:false,sponsored:false,bg:'#1a0000',fg:'#fca5a5',avail:'orange',tags:['Interior','Exterior','Waterproofing'],cat:'Build',bio:'Experienced painters. Residential and commercial. Free quotes within 24 hours.',payment:['Cash','EFT'],svcType:['Onsite','Call Out'],services:['Interior Painting','Exterior Painting','Roof Painting','Waterproofing','Plastering','Skim Coat','Epoxy Flooring','Damp Proofing','Texture Coating','Protective Coatings'],phone:'0791234567',hours:{Mon:'07:00–17:00',Tue:'07:00–17:00',Wed:'07:00–17:00',Thu:'07:00–17:00',Fri:'07:00–16:00',Sat:'08:00–13:00',Sun:'Closed'},afterhours:false,reviews:[{n:'Riana S.',r:4,t:'Good job on our exterior.',d:'1 month ago'}]},
+  {id:9,name:"Mama Fatima's Kitchen",init:'MF',occ:'Home Caterer',loc:'Malmesbury',rating:4.9,revs:88,resp:'15 min',verified:false,sponsored:false,bg:'#1a0800',fg:'#fdba74',avail:'green',tags:['Catering','Events','Lunch'],cat:'',bio:'Home-cooked meals for offices, events, and daily lunch orders. Halaal certified.',payment:['Cash','EFT'],svcType:['Mobile'],services:['Corporate Catering','Event Catering','Daily Lunch Delivery','Breakfast Platters','Finger Foods','Cape Malay Dishes','Samoosas','Wedding Catering','Birthday Catering','Bulk Meal Prep'],phone:'0801234567',hours:{Mon:'06:00–18:00',Tue:'06:00–18:00',Wed:'06:00–18:00',Thu:'06:00–18:00',Fri:'06:00–18:00',Sat:'07:00–14:00',Sun:'Closed'},afterhours:false,promo:`<div class="story-promo-title">🍽️ Office Lunch Deal</div><div class="story-promo-sub">Daily halaal lunch delivery. Fresh, home-cooked. Order before 9AM for same-day delivery.</div><div class="story-promo-badge">Order 5+ Get 1 Free</div>`,reviews:[{n:'Office Staff',r:5,t:'We order lunch daily. Never disappoints!',d:'Today'},{n:'Yusuf A.',r:5,t:'Catered our company event. Loved it.',d:'3 days ago'}]},
+  {id:10,name:'Swartland Repairs',init:'SR',occ:'General Repairs',loc:'Moorreesburg',rating:2.5,revs:8,resp:'4 hrs',verified:false,sponsored:false,bg:'#1a0a0a',fg:'#f87171',avail:'orange',endangered:true,tags:['Handyman','Tiling','Maintenance'],cat:'Build',bio:'General repairs and maintenance services across the Swartland.',payment:['Cash'],svcType:['Call Out','Onsite'],services:['General Repairs','Tiling','Carpentry','Painting','Basic Plumbing','Door Repair','Gutter Cleaning','Fence Repairs','Paving','Odd Jobs'],phone:'0811234567',hours:{Mon:'08:00–17:00',Tue:'08:00–17:00',Wed:'08:00–17:00',Thu:'08:00–17:00',Fri:'08:00–16:00',Sat:'Closed',Sun:'Closed'},afterhours:false,reviews:[{n:'Client A',r:2,t:'Did not finish the job.',d:'1 week ago'},{n:'Client B',r:3,t:'OK work but very slow.',d:'2 weeks ago'}]}
+];
+
+// ═══════════ FEED DATA ═══════════
+const SLIDES=[
+  {brand:'Spar Malmesbury',title:'Weekly Specials',sub:'Save up to 3
